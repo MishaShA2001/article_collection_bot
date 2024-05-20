@@ -62,16 +62,17 @@ class Database:
         :return:
         """
         with cursor_session(self.conn) as cursor:
-            random_link = cursor.execute(f'''WITH RANDOM_LINK AS (SELECT ID,
-                                         Link FROM {TABLE_NAME}
-                                         WHERE ChatID = {chat_id}
-                                         AND RemoveDatetime IS NULL
-                                         ORDER BY RANDOM() LIMIT 1)
-                                         UPDATE {TABLE_NAME}
-                                         SET RemoveDatetime = CURRENT_TIMESTAMP
-                                         WHERE ID = (SELECT ID
-                                         FROM RANDOM_LINK) RETURNING Link'''
-                                         ).fetchone()
+            random_link = cursor.execute(
+                f'''WITH RANDOM_LINK AS (SELECT ID,
+                Link FROM {TABLE_NAME}
+                WHERE ChatID = {chat_id}
+                AND RemoveDatetime IS NULL
+                ORDER BY RANDOM() LIMIT 1)
+                UPDATE {TABLE_NAME}
+                SET RemoveDatetime = CURRENT_TIMESTAMP
+                WHERE ID = (SELECT ID
+                FROM RANDOM_LINK) RETURNING Link'''
+            ).fetchone()
 
             if random_link:
                 return random_link[0]
@@ -98,12 +99,12 @@ class Database:
         """
         with cursor_session(self.conn) as cursor:
             event_tuples = cursor.execute(
-                f'''SELECT InsDate AS ActionDatetime,
+                f'''SELECT DATETIME(InsDate, 'localtime') AS ActionDatetime,
                 Link, 'save'
                 FROM {TABLE_NAME}
                 WHERE ChatID = {chat_id}
                 UNION
-                SELECT RemoveDatetime AS
+                SELECT DATETIME(RemoveDatetime, 'localtime') AS
                 ActionDatetime, Link, 'get'
                 FROM {TABLE_NAME}
                 WHERE ChatID = {chat_id}
