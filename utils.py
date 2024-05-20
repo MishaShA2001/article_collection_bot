@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Literal, Optional
 
 
-URL_PATTERN = compile(r'\A(https?|ftp|file)://.+\Z')
+URL_PATTERN = compile(r'\A(https?|ftp|file)://([a-z0-9.-]+)\Z')
 
 
 @dataclass
@@ -19,7 +19,7 @@ def check_link(text: str) -> bool:
     :param text:
     :return:
     """
-    result = URL_PATTERN.match(text)
+    result = URL_PATTERN.search(text)
     if result:
         return True
     return False
