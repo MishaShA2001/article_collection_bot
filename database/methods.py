@@ -89,23 +89,27 @@ class Database:
                 return True
             return False
 
-    def get_event_list(self, chat_id: int) -> list[Event]:
+    def get_event_list(self, chat_id: int,
+                       events_number: Optional[int] = None) -> list[Event]:
         """
         :param chat_id:
+        :param events_number:
         :return:
         """
         with cursor_session(self.conn) as cursor:
-            event_tuples = cursor.execute(f'''SELECT InsDate AS ActionDatetime,
-                                          Link, 'save'
-                                          FROM {TABLE_NAME}
-                                          WHERE ChatID = {chat_id}
-                                          UNION
-                                          SELECT RemoveDatetime AS
-                                          ActionDatetime, Link, 'get'
-                                          FROM {TABLE_NAME}
-                                          WHERE ChatID = {chat_id}
-                                          AND RemoveDatetime IS NOT NULL
-                                          ORDER BY ActionDatetime'''
-                                          ).fetchall()
+            event_tuples = cursor.execute(
+                f'''SELECT InsDate AS ActionDatetime,
+                Link, 'save'
+                FROM {TABLE_NAME}
+                WHERE ChatID = {chat_id}
+                UNION
+                SELECT RemoveDatetime AS
+                ActionDatetime, Link, 'get'
+                FROM {TABLE_NAME}
+                WHERE ChatID = {chat_id}
+                AND RemoveDatetime IS NOT NULL
+                ORDER BY ActionDatetime DESC
+                {f"LIMIT {events_number}" if events_number else ""}'''
+            ).fetchall()
             return [Event(action_datetime=row[0], link=row[1], action=row[2])
                     for row in event_tuples]
